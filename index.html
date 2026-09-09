@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Тренажёр: Условный оператор — Робот</title>
+  <link rel="icon" type="image/png" href="robot.png">
+  <link rel="apple-touch-icon" href="robot.png">
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Blockly -->
+  <script src="https://cdn.jsdelivr.net/npm/blockly@11.0.0/blockly.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/blockly@11.0.0/msg/ru.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-icon">
+        <img src="robot.png" alt="Робот" class="brand-robot" onerror="this.classList.add('is-missing')">
+      </div>
+      <div>
+        <h1>Робот и условные команды</h1>
+        <div class="subtitle">Собери программу из блоков и доведи робота до финиша</div>
+      </div>
+    </div>
+
+    <div class="task-nav">
+      <button id="prevTaskBtn" class="nav-btn" title="Предыдущая задача">←</button>
+      <div class="task-counter">
+        Задача <strong id="taskNumber">1</strong> из 10
+      </div>
+      <button id="nextTaskBtn" class="nav-btn" title="Следующая задача">→</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <aside class="panel task-panel">
+      <div class="section-title">Задание</div>
+      <div class="task-title" id="taskTitle"></div>
+      <div class="task-description" id="taskDescription"></div>
+
+      <div class="goal-box">
+        <div class="goal-label">Нужно сделать</div>
+        <div id="taskGoal"></div>
+      </div>
+
+      <div class="legend">
+        <div><span class="dot green"></span> нужный груз</div>
+        <div><span class="dot red"></span> неправильный груз</div>
+        <div><span class="dot blue"></span> другой груз</div>
+        <div><span class="dot yellow"></span> другой груз</div>
+      </div>
+
+      <div id="hintBox" class="hint-box hidden">
+        <button id="hintBtn" class="secondary-btn">Показать подсказку</button>
+        <div id="hintText" class="hint-text hidden"></div>
+      </div>
+
+      <div class="task-list" id="taskList"></div>
+    </aside>
+
+    <section class="center-column">
+      <div class="panel world-panel">
+        <div class="panel-header">
+          <div>
+            <div class="section-title">Поле</div>
+            <div class="mini-text">Робот выполняет блоки сверху вниз</div>
+          </div>
+          <div id="runStatus" class="status idle">Готов</div>
+        </div>
+        <div id="world" class="world"></div>
+      </div>
+
+      <div class="panel workspace-panel">
+        <div class="panel-header">
+          <div>
+            <div class="section-title">Программа</div>
+            <div class="mini-text">Перетащи блоки и соедини их</div>
+          </div>
+          <div class="actions">
+            <button id="runBtn" class="primary-btn">▶ Запустить</button>
+            <button id="resetCodeBtn" class="secondary-btn">Очистить код</button>
+          </div>
+        </div>
+        <div id="blocklyDiv" class="blockly-area"></div>
+      </div>
+    </section>
+
+    <aside class="panel help-panel">
+      <div class="section-title">Команды</div>
+
+      <div class="command-group">
+        <div class="command-title movement-title">Движение</div>
+        <div class="command-text">Шагнуть вперёд</div>
+        <div class="command-text">Повернуть налево</div>
+        <div class="command-text">Повернуть направо</div>
+        <div class="command-text">Взять груз</div>
+      </div>
+
+      <div class="command-group">
+        <div class="command-title condition-title">Условия</div>
+        <div class="command-text">Впереди препятствие?</div>
+        <div class="command-text">Груз зелёного цвета?</div>
+        <div class="command-text">Груз красного цвета?</div>
+        <div class="command-text">Груз синего цвета?</div>
+        <div class="command-text">Груз жёлтого цвета?</div>
+        <div class="command-text">Если ... то</div>
+        <div class="command-text">Если ... то ... иначе ...</div>
+        <div class="command-text">Логическое «и» / «или» (с 6-й задачи)</div>
+      </div>
+
+      <div class="command-group">
+        <div class="command-title loop-title">Циклы</div>
+        <div class="command-text">Повторить N раз</div>
+      </div>
+
+      <div class="rules">
+        <div class="rules-title">Правила тренажёра</div>
+        <p>Робот не может пройти сквозь стену и выйти за пределы поля.</p>
+        <p>Груз можно взять только с той клетки, где стоит робот.</p>
+        <p>Для каждой задачи проверяется не только финиш, но и нужный способ решения.</p>
+      </div>
+
+      <div id="messageBox" class="message-box"></div>
+    </aside>
+  </main>
+
+  <footer class="footer">
+    <span>Blockly + собственный простой исполнитель робота</span>
+    <span>10 учебных задач</span>
+  </footer>
+
+  <div id="resultModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="result-modal">
+      <div id="modalKicker" class="modal-kicker"></div>
+      <h2 id="modalTitle"></h2>
+      <p id="modalText"></p>
+      <div class="modal-actions">
+        <button id="modalHintBtn" class="secondary-btn hidden">Взять подсказку</button>
+        <button id="modalRestartBtn" class="secondary-btn hidden">Попробовать снова</button>
+        <button id="modalNextBtn" class="primary-btn hidden">Перейти к следующему заданию</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
