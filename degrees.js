@@ -159,6 +159,9 @@ let degreeCompleted = loadJson(DEGREE_COMPLETED_STORAGE, {});
 let degreeFailures = {};
 let activeDegreeField = null;
 let selectedDegree = 90;
+let degreePickerTracking = false;
+let degreePickerDragging = false;
+let degreePickerPointerId = null;
 const DEGREE_WORLD_CELL_SIZES = [42, 46, 50, 54, 58, 62];
 let degreeWorldZoomIndex = 2;
 
@@ -331,6 +334,60 @@ function degreePointer(angle, radius, color) {
     "\" stroke=\"" + color + "\" stroke-width=\"5\" stroke-linecap=\"round\" />";
 }
 
+function degreeFromPointerEvent(event) {
+  const dial = document.querySelector("#degreeDial svg");
+  if (!dial) return null;
+
+  const rect = dial.getBoundingClientRect();
+  const dx = event.clientX - (rect.left + rect.width / 2);
+  const dy = event.clientY - (rect.top + rect.height / 2);
+  const distance = Math.hypot(dx, dy);
+  if (distance > Math.max(rect.width, rect.height) * 0.62) return null;
+
+  const raw = Math.atan2(dx, -dy) * 180 / Math.PI;
+  const snapped = normalizeAngle(Math.round(raw / 15) * 15);
+  return activeDegreeField && activeDegreeField.degreeKind === "turn"
+    ? Math.abs(snapped)
+    : snapped;
+}
+
+function setSelectedDegree(value) {
+  if (value === null || typeof value === "undefined") return;
+  selectedDegree = value;
+  if (activeDegreeField) activeDegreeField.setValue(String(selectedDegree));
+  refreshPickerDial();
+}
+
+function handlePickerPointerDown(event) {
+  event.preventDefault();
+  const value = degreeFromPointerEvent(event);
+  if (value === null) return;
+
+  if (degreePickerTracking) {
+    degreePickerTracking = false;
+    setSelectedDegree(value);
+    return;
+  }
+
+  degreePickerDragging = true;
+  degreePickerPointerId = event.pointerId;
+  setSelectedDegree(value);
+}
+
+function handlePickerPointerMove(event) {
+  const followsCursor = degreePickerTracking;
+  const isDragging = degreePickerDragging && event.pointerId === degreePickerPointerId;
+  if (!followsCursor && !isDragging) return;
+
+  setSelectedDegree(degreeFromPointerEvent(event));
+}
+
+function stopPickerDrag(event) {
+  if (!degreePickerDragging || event.pointerId !== degreePickerPointerId) return;
+  degreePickerDragging = false;
+  degreePickerPointerId = null;
+}
+
 function renderDegreeDial(container, angle, interactive) {
   if (!container) return;
   const selected = normalizeAngle(angle);
@@ -359,18 +416,8 @@ function renderDegreeDial(container, angle, interactive) {
   container.innerHTML = svg;
   if (interactive) {
     const svgElement = container.querySelector("svg");
-    svgElement.style.cursor = "crosshair";
-    svgElement.addEventListener("click", function (event) {
-      const rect = svgElement.getBoundingClientRect();
-      const dx = event.clientX - (rect.left + rect.width / 2);
-      const dy = event.clientY - (rect.top + rect.height / 2);
-      const raw = Math.atan2(dx, -dy) * 180 / Math.PI;
-      const snapped = normalizeAngle(Math.round(raw / 15) * 15);
-      selectedDegree = activeDegreeField && activeDegreeField.degreeKind === "turn"
-        ? Math.abs(snapped)
-        : snapped;
-      refreshPickerDial();
-    });
+    svgElement.style.cursor = degreePickerTracking ? "crosshair" : "grab";
+    svgElement.addEventListener("pointerdown", handlePickerPointerDown);
   }
 }
 
@@ -388,19 +435,25 @@ function openDegreePicker(field, kind) {
   selectedDegree = kind === "turn"
     ? Math.abs(Number(field.getValue()))
     : normalizeAngle(field.getValue());
+  degreePickerTracking = true;
+  degreePickerDragging = false;
+  degreePickerPointerId = null;
   const picker = document.getElementById("degreePicker");
   document.getElementById("degreePickerTitle").textContent =
     kind === "direction" ? "Куда едет робот?" : "На сколько градусов повернуть?";
   document.getElementById("degreePickerText").textContent =
     kind === "direction"
-      ? "0° — вверх, 90° — вправо, −90° — влево. Нажми на нужное деление."
-      : "Выбери размер поворота. Робот повернёт на этот угол от своего направления.";
+      ? "0° — вверх, 90° — вправо, −90° — влево."
+      : "Выбери размер поворота: робот повернёт на этот угол от своего направления.";
   picker.classList.remove("hidden");
   refreshPickerDial();
 }
 
 function closeDegreePicker() {
   document.getElementById("degreePicker").classList.add("hidden");
+  degreePickerTracking = false;
+  degreePickerDragging = false;
+  degreePickerPointerId = null;
   activeDegreeField = null;
 }
 
@@ -1024,9 +1077,11 @@ document.addEventListener("DOMContentLoaded", function () {
   });
   document.getElementById("degreePickerClose").addEventListener("click", closeDegreePicker);
   document.getElementById("degreePickerApply").addEventListener("click", function () {
-    if (activeDegreeField) activeDegreeField.setValue(String(selectedDegree));
     closeDegreePicker();
   });
+  window.addEventListener("pointermove", handlePickerPointerMove);
+  window.addEventListener("pointerup", stopPickerDrag);
+  window.addEventListener("pointercancel", stopPickerDrag);
   document.getElementById("modalRetryBtn").addEventListener("click", closeDegreeResult);
   document.getElementById("modalHintBtn").addEventListener("click", function () {
     openDegreeResult("hint");
@@ -1036,7 +1091,6 @@ document.addEventListener("DOMContentLoaded", function () {
     if (degreeTaskIndex < DEGREE_TASKS.length - 1) loadDegreeTask(degreeTaskIndex + 1);
   });
 });
-
 
 
 
