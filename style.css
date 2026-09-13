@@ -119,6 +119,39 @@ button {
   display: none;
 }
 
+.course-nav {
+  display: flex;
+  align-items: center;
+
+  gap: 5px;
+}
+
+.course-link {
+  min-height: 32px;
+
+  padding: 7px 9px;
+
+  border: 1px solid transparent;
+  border-radius: 5px;
+
+  color: #5d625c;
+
+  font-size: 11px;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.course-link:hover {
+  background: #f1eee6;
+  border-color: #d7d0c2;
+}
+
+.course-link.active {
+  background: #e8eef5;
+  border-color: #bdccdc;
+  color: var(--blue);
+}
+
 h1 {
   margin: 0;
 
@@ -477,6 +510,52 @@ h1 {
   gap: 12px;
 }
 
+.conditions-page .center-column {
+  grid-template-rows:
+    var(--conditions-world-height, minmax(360px, 1.05fr))
+    12px
+    minmax(270px, 0.95fr);
+
+  gap: 0;
+}
+
+.conditions-panel-resizer {
+  position: relative;
+  z-index: 2;
+
+  display: grid;
+  place-items: center;
+
+  cursor: row-resize;
+  touch-action: none;
+}
+
+.conditions-panel-resizer::before {
+  width: 48px;
+  height: 4px;
+
+  border-radius: 2px;
+
+  background: #b2afa5;
+  box-shadow: 0 0 0 3px #f1eee6;
+
+  content: "";
+  transition: width 0.15s ease, background 0.15s ease;
+}
+
+.conditions-panel-resizer:hover::before,
+.conditions-panel-resizer:focus-visible::before,
+.conditions-panel-resizer.is-dragging::before {
+  width: 68px;
+
+  background: var(--blue);
+}
+
+body.is-resizing-condition-panels {
+  cursor: row-resize;
+  user-select: none;
+}
+
 .world-panel,
 .workspace-panel {
   min-height: 0;
@@ -504,6 +583,46 @@ h1 {
     space-between;
 
   gap: 12px;
+}
+
+.world-tools,
+.world-zoom-controls {
+  display: flex;
+  align-items: center;
+
+  gap: 5px;
+}
+
+.world-zoom-controls {
+  gap: 2px;
+}
+
+.world-zoom-btn {
+  width: 27px;
+  height: 27px;
+
+  padding: 0;
+
+  border: 1px solid #b8c2ca;
+  border-radius: 4px;
+
+  background: #f8fbfd;
+  color: #2e668f;
+
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.world-zoom-btn:hover:not(:disabled) {
+  background: #e7f0f7;
+  border-color: #7fa6c3;
+}
+
+.world-zoom-btn:disabled {
+  cursor: default;
+  opacity: 0.45;
 }
 
 .mini-text {
@@ -667,7 +786,7 @@ h1 {
 }
 
 .grid {
-  --cell: 46px;
+  --cell: var(--robot-world-cell, 46px);
 
   display: grid;
 
@@ -755,8 +874,8 @@ h1 {
    ========================================================= */
 
 .robot {
-  width: 35px;
-  height: 35px;
+  width: calc(var(--cell) - 6px);
+  height: calc(var(--cell) - 6px);
 
   z-index:
     5;
@@ -1198,6 +1317,14 @@ h1 {
   .subtitle {
     display:
       none;
+  }
+
+  .course-nav {
+    order: 3;
+
+    width: 100%;
+
+    justify-content: center;
   }
 
   .layout {

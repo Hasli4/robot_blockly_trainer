@@ -198,6 +198,8 @@ let isRunning = false;
 let isLoadingTask = false;
 let completedTasks = loadJson(COMPLETED_STORAGE_KEY, {});
 let failedAttempts = {};
+const ROBOT_WORLD_CELL_SIZES = [38, 42, 46, 50, 54, 58];
+let robotWorldZoomIndex = 2;
 
 function loadJson(key, fallback) {
   try {
@@ -226,6 +228,121 @@ function clearCode() {
   delete programs[currentTaskIndex];
   localStorage.setItem(CODE_STORAGE_KEY, JSON.stringify(programs));
   showMessage("Код очищен. Собери программу из блоков.", "info");
+}
+
+function resizeBlocklyForConditionPanel() {
+  requestAnimationFrame(function () {
+    if (workspace) Blockly.svgResize(workspace);
+  });
+}
+
+function setConditionWorldPanelHeight(nextHeight) {
+  const column = document.getElementById("conditionCenterColumn");
+  const resizer = document.getElementById("conditionPanelResizer");
+  const minimumCodeHeight = 270;
+  const maximumWorldHeight = Math.max(
+    260,
+    column.clientHeight - minimumCodeHeight - resizer.offsetHeight
+  );
+  const minimumWorldHeight = Math.min(340, maximumWorldHeight);
+  const height = Math.round(
+    Math.max(minimumWorldHeight, Math.min(maximumWorldHeight, nextHeight))
+  );
+
+  column.style.setProperty("--conditions-world-height", height + "px");
+  resizer.setAttribute("aria-valuemin", String(minimumWorldHeight));
+  resizer.setAttribute("aria-valuemax", String(maximumWorldHeight));
+  resizer.setAttribute("aria-valuenow", String(height));
+  resizer.setAttribute("aria-valuetext", "Высота поля: " + height + " пикселей");
+  resizeBlocklyForConditionPanel();
+}
+
+function initConditionPanelResizer() {
+  const column = document.getElementById("conditionCenterColumn");
+  const resizer = document.getElementById("conditionPanelResizer");
+  const worldPanel = document.querySelector(".conditions-page .world-panel");
+  let activePointerId = null;
+
+  function currentWorldHeight() {
+    return worldPanel.getBoundingClientRect().height;
+  }
+
+  function resizeFromPointer(clientY) {
+    setConditionWorldPanelHeight(
+      clientY - column.getBoundingClientRect().top
+    );
+  }
+
+  resizer.addEventListener("pointerdown", function (event) {
+    activePointerId = event.pointerId;
+    resizer.setPointerCapture(activePointerId);
+    resizer.classList.add("is-dragging");
+    document.body.classList.add("is-resizing-condition-panels");
+    resizeFromPointer(event.clientY);
+  });
+
+  resizer.addEventListener("pointermove", function (event) {
+    if (event.pointerId === activePointerId) resizeFromPointer(event.clientY);
+  });
+
+  function stopResizing(event) {
+    if (event.pointerId !== activePointerId) return;
+    activePointerId = null;
+    resizer.classList.remove("is-dragging");
+    document.body.classList.remove("is-resizing-condition-panels");
+  }
+
+  resizer.addEventListener("pointerup", stopResizing);
+  resizer.addEventListener("pointercancel", stopResizing);
+  resizer.addEventListener("lostpointercapture", function () {
+    activePointerId = null;
+    resizer.classList.remove("is-dragging");
+    document.body.classList.remove("is-resizing-condition-panels");
+  });
+
+  resizer.addEventListener("keydown", function (event) {
+    if (event.key !== "ArrowUp" && event.key !== "ArrowDown") return;
+    event.preventDefault();
+    setConditionWorldPanelHeight(
+      currentWorldHeight() + (event.key === "ArrowUp" ? 40 : -40)
+    );
+  });
+
+  window.addEventListener("resize", function () {
+    if (column.style.getPropertyValue("--conditions-world-height")) {
+      setConditionWorldPanelHeight(currentWorldHeight());
+    } else {
+      resizeBlocklyForConditionPanel();
+    }
+  });
+}
+
+function updateRobotWorldZoom() {
+  const world = document.getElementById("world");
+  const zoomOut = document.getElementById("worldZoomOutBtn");
+  const zoomIn = document.getElementById("worldZoomInBtn");
+
+  world.style.setProperty(
+    "--robot-world-cell",
+    ROBOT_WORLD_CELL_SIZES[robotWorldZoomIndex] + "px"
+  );
+  zoomOut.disabled = robotWorldZoomIndex === 0;
+  zoomIn.disabled = robotWorldZoomIndex === ROBOT_WORLD_CELL_SIZES.length - 1;
+}
+
+function changeRobotWorldZoom(delta) {
+  const nextIndex = Math.max(
+    0,
+    Math.min(
+      ROBOT_WORLD_CELL_SIZES.length - 1,
+      robotWorldZoomIndex + delta
+    )
+  );
+
+  if (nextIndex === robotWorldZoomIndex) return;
+
+  robotWorldZoomIndex = nextIndex;
+  updateRobotWorldZoom();
 }
 
 function cloneTaskState(task) {
@@ -753,9 +870,17 @@ document.addEventListener("DOMContentLoaded", function () {
   if (Number.isInteger(savedTask) && savedTask >= 0 && savedTask < TASKS.length) currentTaskIndex = savedTask;
   initBlockly();
   loadTask(currentTaskIndex, false);
+  initConditionPanelResizer();
+  updateRobotWorldZoom();
 
   document.getElementById("runBtn").addEventListener("click", runProgram);
   document.getElementById("resetCodeBtn").addEventListener("click", clearCode);
+  document.getElementById("worldZoomOutBtn").addEventListener("click", function () {
+    changeRobotWorldZoom(-1);
+  });
+  document.getElementById("worldZoomInBtn").addEventListener("click", function () {
+    changeRobotWorldZoom(1);
+  });
   document.getElementById("prevTaskBtn").addEventListener("click", function () { loadTask(currentTaskIndex - 1); });
   document.getElementById("nextTaskBtn").addEventListener("click", function () { loadTask(currentTaskIndex + 1); });
   document.getElementById("hintBtn").addEventListener("click", function () {

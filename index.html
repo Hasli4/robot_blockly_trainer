@@ -12,7 +12,7 @@
   <script src="https://cdn.jsdelivr.net/npm/blockly@11.0.0/blockly.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/blockly@11.0.0/msg/ru.js"></script>
 </head>
-<body>
+<body class="conditions-page">
   <header class="topbar">
     <div class="brand">
       <div class="brand-icon">
@@ -23,6 +23,11 @@
         <div class="subtitle">Собери программу из блоков и доведи робота до финиша</div>
       </div>
     </div>
+
+    <nav class="course-nav" aria-label="Темы тренажёра">
+      <a class="course-link active" href="index.html">Условия</a>
+      <a class="course-link" href="degrees.html">Вращение и градусы</a>
+    </nav>
 
     <div class="task-nav">
       <button id="prevTaskBtn" class="nav-btn" title="Предыдущая задача">←</button>
@@ -59,17 +64,32 @@
       <div class="task-list" id="taskList"></div>
     </aside>
 
-    <section class="center-column">
+    <section id="conditionCenterColumn" class="center-column">
       <div class="panel world-panel">
         <div class="panel-header">
           <div>
             <div class="section-title">Поле</div>
             <div class="mini-text">Робот выполняет блоки сверху вниз</div>
           </div>
-          <div id="runStatus" class="status idle">Готов</div>
+          <div class="world-tools">
+            <div class="world-zoom-controls" aria-label="Масштаб поля">
+              <button id="worldZoomOutBtn" class="world-zoom-btn" type="button" title="Отдалить поле" aria-label="Отдалить поле">-</button>
+              <button id="worldZoomInBtn" class="world-zoom-btn" type="button" title="Приблизить поле" aria-label="Приблизить поле">+</button>
+            </div>
+            <div id="runStatus" class="status idle">Готов</div>
+          </div>
         </div>
         <div id="world" class="world"></div>
       </div>
+
+      <div
+        id="conditionPanelResizer"
+        class="conditions-panel-resizer"
+        role="separator"
+        aria-label="Изменить высоту поля и области кода"
+        aria-orientation="horizontal"
+        tabindex="0"
+      ></div>
 
       <div class="panel workspace-panel">
         <div class="panel-header">

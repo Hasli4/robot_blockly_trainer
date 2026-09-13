@@ -1,0 +1,431 @@
+.degrees-layout {
+  grid-template-columns: 270px minmax(520px, 1fr) 255px;
+}
+
+.degrees-page .center-column {
+  grid-template-rows:
+    var(--degrees-world-height, minmax(360px, 1.05fr))
+    12px
+    minmax(270px, 0.95fr);
+
+  gap: 0;
+}
+
+.panel-resizer {
+  position: relative;
+  z-index: 2;
+
+  display: grid;
+  place-items: center;
+
+  cursor: row-resize;
+  touch-action: none;
+}
+
+.panel-resizer::before {
+  width: 48px;
+  height: 4px;
+
+  border-radius: 2px;
+
+  background: #9ab7cd;
+  box-shadow: 0 0 0 3px #e7f0f7;
+
+  content: "";
+  transition: width 0.15s ease, background 0.15s ease;
+}
+
+.panel-resizer:hover::before,
+.panel-resizer:focus-visible::before,
+.panel-resizer.is-dragging::before {
+  width: 68px;
+
+  background: #2e7fb6;
+}
+
+body.is-resizing-panels {
+  cursor: row-resize;
+  user-select: none;
+}
+
+.task-stage {
+  display: inline-flex;
+  align-items: center;
+
+  min-height: 22px;
+
+  margin-top: 7px;
+  padding: 3px 7px;
+
+  border: 1px solid #b9cde0;
+  border-radius: 4px;
+
+  background: #eaf1f7;
+  color: #315f8f;
+
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.degrees-rule {
+  display: grid;
+
+  gap: 5px;
+
+  margin-top: 13px;
+  padding: 10px;
+
+  border: 1px solid #c9d9e8;
+  border-left: 4px solid #438bc6;
+
+  background: #edf5fb;
+  color: #466075;
+
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.degrees-rule strong {
+  color: #2e6490;
+  font-size: 11px;
+}
+
+.degree-help-panel {
+  padding: 15px;
+
+  overflow-y: auto;
+}
+
+.heading-card {
+  display: grid;
+  justify-items: center;
+
+  gap: 7px;
+
+  margin-top: 11px;
+  padding: 12px 8px;
+
+  border: 1px solid #c6d6e5;
+  border-radius: 6px;
+
+  background: #edf5fb;
+}
+
+.heading-dial {
+  width: 150px;
+  height: 150px;
+}
+
+.heading-readout {
+  display: grid;
+  justify-items: center;
+
+  gap: 1px;
+}
+
+.heading-readout span:first-child,
+.degree-selected span:first-child {
+  color: #2f6d9d;
+  font-size: 19px;
+  font-weight: 900;
+}
+
+.heading-readout span:last-child,
+.degree-selected span:last-child {
+  color: #647080;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.rotation-readout {
+  display: grid;
+  justify-items: center;
+
+  gap: 2px;
+
+  padding-top: 7px;
+
+  border-top: 1px solid #c5dbe9;
+
+  color: #687988;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.rotation-readout strong {
+  color: #2f6d9d;
+  font-size: 11px;
+}
+
+.degree-command-title {
+  color: #2e719f;
+}
+
+.degrees-world {
+  flex: 1;
+  min-height: 0;
+
+  padding: 16px;
+
+  display: grid;
+  place-items: center;
+
+  overflow: auto;
+
+  background:
+    radial-gradient(circle, rgba(55, 108, 151, 0.09) 1px, transparent 1px),
+    #f1f6f8;
+
+  background-size: 16px 16px;
+}
+
+.degree-grid {
+  --degree-cell: var(--degrees-world-cell, 50px);
+
+  display: grid;
+
+  gap: 2px;
+  padding: 7px;
+
+  border: 1px solid #8fa5b6;
+  border-radius: 5px;
+
+  background: #aebdca;
+  box-shadow: 0 3px 8px rgba(45, 61, 74, 0.18);
+}
+
+.degree-cell {
+  position: relative;
+
+  width: var(--degree-cell);
+  height: var(--degree-cell);
+
+  display: grid;
+  place-items: center;
+
+  overflow: hidden;
+
+  border: 1px solid #d9e2e7;
+  border-radius: 2px;
+
+  background: #fbfdff;
+}
+
+.degree-cell.has-robot {
+  z-index: 6;
+
+  overflow: visible;
+}
+
+.degree-cell.has-box::after {
+  position: absolute;
+  right: 3px;
+  bottom: 2px;
+
+  content: "□";
+  color: rgba(89, 109, 125, 0.22);
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.degree-box {
+  position: relative;
+  z-index: 2;
+
+  width: 24px;
+  height: 22px;
+
+  border: 2px solid #8b5b2e;
+  border-radius: 3px;
+
+  background:
+    linear-gradient(135deg, transparent 48%, #d9a266 49%, #d9a266 52%, transparent 53%),
+    #d99046;
+
+  box-shadow: 0 2px 4px rgba(93, 59, 29, 0.2);
+}
+
+.degree-box::before {
+  position: absolute;
+  top: 4px;
+  left: 3px;
+
+  width: 14px;
+
+  border-top: 2px solid rgba(255, 242, 214, 0.8);
+
+  content: "";
+}
+
+.degree-robot {
+  position: relative;
+  z-index: 4;
+
+  width: var(--degree-robot-size, 42px);
+  height: var(--degree-robot-size, 42px);
+
+  overflow: visible;
+}
+
+.degree-robot-image {
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: contain;
+  transform: var(--robot-image-transform);
+  transition: transform 0.18s ease;
+}
+
+.degree-direction-arrow {
+  position: absolute;
+  top: var(--degree-arrow-top, -10px);
+  left: 50%;
+
+  width: var(--degree-arrow-size, 22px);
+  height: var(--degree-arrow-size, 22px);
+
+  transform: translateX(-50%) rotate(var(--robot-arrow-turn));
+  transform-origin: 50% var(--degree-arrow-origin-y, 31px);
+
+  display: grid;
+  place-items: center;
+
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+
+  background: #126fa9;
+  box-shadow:
+    0 0 0 2px #0c4f7d,
+    0 3px 6px rgba(18, 65, 96, 0.35);
+
+  color: #ffffff;
+  font-size: var(--degree-arrow-font-size, 14px);
+  font-weight: 900;
+  line-height: 1;
+  text-align: center;
+
+  pointer-events: none;
+}
+
+.degree-robot.image-missing {
+  border: 2px solid #2f6d9d;
+  border-radius: 7px;
+  background: #dcecf7;
+}
+
+.degree-robot.image-missing .degree-robot-image {
+  display: none;
+}
+
+.degree-picker {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+
+  display: grid;
+  place-items: center;
+
+  padding: 18px;
+
+  background: rgba(28, 43, 55, 0.42);
+}
+
+.degree-picker.hidden {
+  display: none;
+}
+
+.degree-picker-card {
+  width: min(370px, 100%);
+
+  padding: 20px;
+
+  border: 1px solid #afc9dd;
+  border-radius: 8px;
+
+  background: #f9fcff;
+  box-shadow: 0 16px 36px rgba(30, 47, 60, 0.3);
+}
+
+.degree-picker-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 10px;
+}
+
+.degree-picker-heading h2 {
+  margin: 5px 0 0;
+
+  font-size: 21px;
+  line-height: 1.1;
+}
+
+.picker-close {
+  width: 30px;
+  height: 30px;
+
+  padding: 0;
+
+  border: 1px solid #bfcbd4;
+  border-radius: 5px;
+
+  background: #ffffff;
+  color: #557083;
+
+  cursor: pointer;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.degree-picker-card p {
+  margin: 11px 0 4px;
+
+  color: #62717d;
+  font-size: 12px;
+}
+
+.degree-dial {
+  width: 270px;
+  height: 270px;
+
+  margin: 0 auto;
+}
+
+.degree-dial svg,
+.heading-dial svg {
+  display: block;
+
+  width: 100%;
+  height: 100%;
+}
+
+.degree-selected {
+  display: grid;
+  justify-items: center;
+
+  gap: 1px;
+
+  margin: 2px 0 13px;
+}
+
+.degree-picker-card .primary-btn {
+  width: 100%;
+}
+
+.blocklyTreeLabel {
+  font-weight: 800;
+}
+
+@media (max-width: 1150px) {
+  .degrees-layout {
+    grid-template-columns: 255px minmax(520px, 1fr);
+  }
+
+  .degree-help-panel {
+    display: none;
+  }
+}

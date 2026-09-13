@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Тренажёр: Вращение и градусы — Робот</title>
+  <link rel="icon" type="image/png" href="robot.png">
+  <link rel="apple-touch-icon" href="robot.png">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="degrees.css">
+  <script src="https://cdn.jsdelivr.net/npm/blockly@11.0.0/blockly.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/blockly@11.0.0/msg/ru.js"></script>
+</head>
+<body class="degrees-page">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-icon">
+        <img src="robot.png" alt="Робот" class="brand-robot" onerror="this.classList.add('is-missing')">
+      </div>
+      <div>
+        <h1>Робот, повороты и градусы</h1>
+        <div class="subtitle">Собери программу и научи робота менять направление</div>
+      </div>
+    </div>
+
+    <nav class="course-nav" aria-label="Темы тренажёра">
+      <a class="course-link" href="index.html">Условия</a>
+      <a class="course-link active" href="degrees.html">Вращение и градусы</a>
+    </nav>
+
+    <div class="task-nav">
+      <button id="prevTaskBtn" class="nav-btn" title="Предыдущая задача">←</button>
+      <div class="task-counter">Задача <strong id="taskNumber">1</strong> из 10</div>
+      <button id="nextTaskBtn" class="nav-btn" title="Следующая задача">→</button>
+    </div>
+  </header>
+
+  <main class="layout degrees-layout">
+    <aside class="panel task-panel">
+      <div class="section-title">Задание</div>
+      <div class="task-stage" id="taskStage"></div>
+      <div class="task-title" id="taskTitle"></div>
+      <div class="task-description" id="taskDescription"></div>
+
+      <div class="goal-box">
+        <div class="goal-label">Нужно сделать</div>
+        <div id="taskGoal"></div>
+      </div>
+
+      <div class="degrees-rule">
+        <strong>Как читать круг</strong>
+        <span>0° — вверх, 90° — вправо, 180° — вниз, −90° — влево.</span>
+      </div>
+
+      <div id="hintBox" class="hint-box hidden">
+        <button id="hintBtn" class="secondary-btn">Показать подсказку</button>
+        <div id="hintText" class="hint-text hidden"></div>
+      </div>
+
+      <div class="task-list" id="taskList"></div>
+    </aside>
+
+    <section id="degreeCenterColumn" class="center-column">
+      <div class="panel world-panel">
+        <div class="panel-header">
+          <div>
+            <div class="section-title">Поле</div>
+            <div class="mini-text" id="worldCaption">Собери все коробки</div>
+          </div>
+          <div class="world-tools">
+            <div class="world-zoom-controls" aria-label="Масштаб поля">
+              <button id="worldZoomOutBtn" class="world-zoom-btn" type="button" title="Отдалить поле" aria-label="Отдалить поле">-</button>
+              <button id="worldZoomInBtn" class="world-zoom-btn" type="button" title="Приблизить поле" aria-label="Приблизить поле">+</button>
+            </div>
+            <div id="runStatus" class="status idle">Готов</div>
+          </div>
+        </div>
+        <div class="degrees-world" id="world"></div>
+      </div>
+
+      <div
+        id="panelResizer"
+        class="panel-resizer"
+        role="separator"
+        aria-label="Изменить высоту поля и области кода"
+        aria-orientation="horizontal"
+        tabindex="0"
+      ></div>
+
+      <div class="panel workspace-panel">
+        <div class="panel-header">
+          <div>
+            <div class="section-title">Программа</div>
+            <div class="mini-text">Нажми на число градусов в блоке, чтобы выбрать угол на круге</div>
+          </div>
+          <div class="actions">
+            <button id="runBtn" class="primary-btn">▶ Запустить</button>
+            <button id="resetCodeBtn" class="secondary-btn">Очистить код</button>
+          </div>
+        </div>
+        <div id="blocklyDiv" class="blockly-area"></div>
+      </div>
+    </section>
+
+    <aside class="panel degree-help-panel">
+      <div class="section-title">Направление робота</div>
+      <div class="heading-card">
+        <div id="headingDial" class="heading-dial" aria-label="Текущее направление робота"></div>
+        <div class="heading-readout"><span id="headingValue">90°</span><span id="headingName">вправо</span></div>
+        <div class="rotation-readout"><span>Способ вращения</span><strong id="rotationModeValue">вращать</strong></div>
+      </div>
+
+      <div class="command-group">
+        <div class="command-title degree-command-title">Первые 5 задач</div>
+        <div class="command-text">«Идти в направлении N°» каждый раз задаёт направление заново. Слева на круге градусы со знаком минус.</div>
+      </div>
+
+      <div class="command-group">
+        <div class="command-title degree-command-title">Задачи 6–10</div>
+        <div class="command-text">Поворот вправо прибавляет градусы к направлению.</div>
+        <div class="command-text">Поворот влево вычитает градусы из направления.</div>
+      </div>
+
+      <div class="command-group">
+        <div class="command-title degree-command-title">Способ вращения</div>
+        <div class="command-text">«Вращать» — робот поворачивается в любую сторону.</div>
+        <div class="command-text">«Влево-вправо» — робот смотрит только вправо или влево.</div>
+        <div class="command-text">«Не вращать» — картинка робота не меняется.</div>
+      </div>
+
+      <div class="rules">
+        <div class="rules-title">Коробки</div>
+        <p>Робот забирает коробку, когда останавливается на её клетке.</p>
+        <p>За границу поля выходить нельзя.</p>
+      </div>
+
+      <div id="messageBox" class="message-box"></div>
+    </aside>
+  </main>
+
+  <footer class="footer">
+    <span>Blockly + робот на клеточном поле</span>
+    <span>10 задач про градусы</span>
+  </footer>
+
+  <div id="degreePicker" class="degree-picker hidden" role="dialog" aria-modal="true" aria-labelledby="degreePickerTitle">
+    <div class="degree-picker-card">
+      <div class="degree-picker-heading">
+        <div>
+          <div class="modal-kicker">Выбор направления</div>
+          <h2 id="degreePickerTitle">Выбери градусы</h2>
+        </div>
+        <button id="degreePickerClose" class="picker-close" title="Закрыть">×</button>
+      </div>
+      <p id="degreePickerText">Нажми на деление круга.</p>
+      <div id="degreeDial" class="degree-dial"></div>
+      <div class="degree-selected"><span id="degreeSelectedValue">90°</span><span id="degreeSelectedName">вправо</span></div>
+      <button id="degreePickerApply" class="primary-btn">Выбрать угол</button>
+    </div>
+  </div>
+
+  <div id="resultModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="result-modal">
+      <div id="modalKicker" class="modal-kicker"></div>
+      <h2 id="modalTitle"></h2>
+      <p id="modalText"></p>
+      <div class="modal-actions">
+        <button id="modalHintBtn" class="secondary-btn hidden">Взять подсказку</button>
+        <button id="modalRetryBtn" class="secondary-btn hidden">Попробовать снова</button>
+        <button id="modalNextBtn" class="primary-btn hidden">Следующая задача</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="degrees.js"></script>
+</body>
+</html>
