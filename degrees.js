@@ -996,6 +996,13 @@ function closeDegreeResult() {
   document.getElementById("resultModal").classList.add("hidden");
 }
 
+function returnDegreeRobotToStart() {
+  degreeState = cloneDegreeState(currentDegreeTask());
+  renderDegreeWorld();
+  setDegreeStatus("Готов", "idle");
+  showDegreeMessage("Робот вернулся на старт. Исправь программу и запусти её снова.", "info");
+}
+
 function registerDegreeFailure(reason) {
   degreeFailures[degreeTaskIndex] = (degreeFailures[degreeTaskIndex] || 0) + 1;
   updateDegreeHintAvailability();
@@ -1082,7 +1089,10 @@ document.addEventListener("DOMContentLoaded", function () {
   window.addEventListener("pointermove", handlePickerPointerMove);
   window.addEventListener("pointerup", stopPickerDrag);
   window.addEventListener("pointercancel", stopPickerDrag);
-  document.getElementById("modalRetryBtn").addEventListener("click", closeDegreeResult);
+  document.getElementById("modalRetryBtn").addEventListener("click", function () {
+    if (this.textContent === "Попробовать снова") returnDegreeRobotToStart();
+    closeDegreeResult();
+  });
   document.getElementById("modalHintBtn").addEventListener("click", function () {
     openDegreeResult("hint");
   });
@@ -1091,7 +1101,6 @@ document.addEventListener("DOMContentLoaded", function () {
     if (degreeTaskIndex < DEGREE_TASKS.length - 1) loadDegreeTask(degreeTaskIndex + 1);
   });
 });
-
 
 
 

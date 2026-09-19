@@ -100,62 +100,110 @@ const TASKS = [
     allowLogic: true
   },
   {
-    title: "Красный груз у стены",
-    description: "На дороге лежат зелёный и красный грузы. Нужен только красный, который лежит прямо перед стеной.",
-    goal: "Возьми красный груз у стены и дойди до финиша.",
-    hint: "Здесь надо проверить сразу две вещи: цвет груза и стену впереди. Груз подходит только тогда, когда оба ответа — «да».",
-    width: 6, height: 4,
-    start: { x: 1, y: 1, dir: "east" },
-    finish: { x: 3, y: 2 },
-    walls: [[4, 1]],
+    title: "Красные грузы под стеной",
+    description: "На дорожке семь грузов. Нужны только красные грузы, над которыми стоит препятствие. Среди красных есть один лишний: над ним свободно.",
+    goal: "Собери красные грузы, над которыми есть препятствие, и дойди до финиша.",
+    hint: "На каждой клетке робот сначала делает шаг. Потом он должен ответить на два вопроса: груз красный и есть ли препятствие сверху. Подходят только грузы с двумя ответами «да».",
+    width: 9, height: 5,
+    start: { x: 0, y: 2, dir: "east" },
+    finish: { x: 7, y: 2 },
+    walls: [[2, 1], [4, 1], [6, 1]],
     cargo: [
-      { id: "c7g", x: 2, y: 1, color: "green" },
-      { id: "c7r", x: 3, y: 1, color: "red" }
+      { id: "c7b", x: 1, y: 2, color: "blue" },
+      { id: "c7r1", x: 2, y: 2, color: "red" },
+      { id: "c7g", x: 3, y: 2, color: "green" },
+      { id: "c7r2", x: 4, y: 2, color: "red" },
+      { id: "c7r3", x: 5, y: 2, color: "red" },
+      { id: "c7r4", x: 6, y: 2, color: "red" },
+      { id: "c7y", x: 7, y: 2, color: "yellow" }
     ],
-    expectedPicked: ["c7r"],
+    expectedPicked: ["c7r1", "c7r2", "c7r4"],
     requiredBlocks: ["robot_if", "cargo_is_color", "front_is_wall", "robot_repeat", "logic_and"],
-    requiredNesting: [{ parent: "robot_repeat", child: "robot_if" }],
+    requiredNesting: [
+      { parent: "robot_repeat", child: "move_forward" },
+      { parent: "robot_repeat", child: "robot_if" }
+    ],
+    requiredRepeatTimes: [7],
+    requiredConditionCombination: {
+      operator: "logic_and",
+      predicates: [
+        { type: "cargo_is_color", color: "red" },
+        { type: "front_is_wall", position: "above" }
+      ]
+    },
+    blockLimits: { robot_repeat: 1, move_forward: 1, robot_if: 1, logic_and: 1, cargo_is_color: 1, front_is_wall: 1, take_cargo: 1 },
+    maxBlocks: 7,
     allowLogic: true
   },
   {
-    title: "Повороты и синие грузы",
-    description: "Дорога дважды поворачивает. По пути лежат грузы. Робот должен не врезаться в стены и забрать синие.",
-    goal: "Собери синие грузы и доберись до финиша.",
-    hint: "У робота две заботы: не пропустить синий груз и вовремя повернуть у стены. Подумай, что надо проверять перед каждым шагом.",
-    width: 6, height: 5,
+    title: "Три стороны маршрута",
+    description: "Робот проходит три стороны квадратной дорожки. На каждой стороне он делает три шага, потом поворачивает направо. Нужны только синие грузы.",
+    goal: "Собери синие грузы с помощью цикла внутри цикла.",
+    hint: "Сначала придумай маленький цикл из трёх шагов. Затем положи его в большой цикл, который повторяет целую сторону маршрута.",
+    width: 6, height: 6,
     start: { x: 1, y: 1, dir: "east" },
-    finish: { x: 1, y: 3 },
-    walls: [[5, 1], [4, 4]],
+    finish: { x: 1, y: 4 },
+    walls: [],
     cargo: [
       { id: "c8b1", x: 2, y: 1, color: "blue" },
       { id: "c8r", x: 3, y: 1, color: "red" },
-      { id: "c8y", x: 4, y: 2, color: "yellow" },
-      { id: "c8b2", x: 3, y: 3, color: "blue" }
+      { id: "c8b2", x: 4, y: 1, color: "blue" },
+      { id: "c8g", x: 4, y: 2, color: "green" },
+      { id: "c8b3", x: 4, y: 3, color: "blue" },
+      { id: "c8y", x: 4, y: 4, color: "yellow" },
+      { id: "c8b4", x: 3, y: 4, color: "blue" },
+      { id: "c8r2", x: 2, y: 4, color: "red" },
+      { id: "c8b5", x: 1, y: 4, color: "blue" }
     ],
-    expectedPicked: ["c8b1", "c8b2"],
-    requiredBlocks: ["robot_if", "cargo_is_color", "front_is_wall", "robot_repeat"],
-    requiredNesting: [{ parent: "robot_repeat", child: "robot_if" }],
-    allowLogic: true
+    expectedPicked: ["c8b1", "c8b2", "c8b3", "c8b4", "c8b5"],
+    requiredBlocks: ["robot_if", "cargo_is_color", "robot_repeat", "move_forward", "turn_right"],
+    requiredNesting: [
+      { parent: "robot_repeat", child: "robot_repeat" },
+      { parent: "robot_repeat", child: "robot_if" },
+      { parent: "robot_repeat", child: "move_forward" }
+    ],
+    requiredRepeatTimes: [3, 3],
+    requiredPredicates: [{ type: "cargo_is_color", color: "blue" }],
+    blockLimits: { robot_repeat: 2, move_forward: 1, robot_if: 1, cargo_is_color: 1, take_cargo: 1, turn_right: 1 },
+    maxBlocks: 7
   },
   {
-    title: "Маршрут для двух цветов",
-    description: "Дорога знакомая, но задание другое: нужны красные и зелёные грузы. Про стены тоже не забудь.",
-    goal: "Собери красные и зелёные грузы и дойди до финиша.",
-    hint: "Сначала реши, как одним условием выбрать два нужных цвета. Потом подумай, как робот будет вести себя перед стеной.",
+    title: "Два цвета на маршруте",
+    description: "Робот снова проходит три стороны квадратной дорожки. Теперь ему нужны зелёные и красные грузы. Синие и жёлтые оставь на месте.",
+    goal: "Собери зелёные и красные грузы с помощью двух вложенных циклов.",
+    hint: "Один вопрос про цвет здесь не справится. Соедини проверку зелёного и красного груза словом «или», а маршрут собери так же, как в прошлой задаче.",
     width: 6, height: 5,
     start: { x: 1, y: 1, dir: "east" },
-    finish: { x: 1, y: 3 },
-    walls: [[5, 1], [4, 4]],
+    finish: { x: 1, y: 4 },
+    walls: [],
     cargo: [
       { id: "c9g1", x: 2, y: 1, color: "green" },
       { id: "c9b", x: 3, y: 1, color: "blue" },
       { id: "c9r1", x: 4, y: 1, color: "red" },
       { id: "c9y", x: 4, y: 2, color: "yellow" },
-      { id: "c9g2", x: 3, y: 3, color: "green" }
+      { id: "c9g2", x: 4, y: 3, color: "green" },
+      { id: "c9r2", x: 4, y: 4, color: "red" },
+      { id: "c9y2", x: 3, y: 4, color: "yellow" },
+      { id: "c9r3", x: 2, y: 4, color: "red" },
+      { id: "c9g3", x: 1, y: 4, color: "green" }
     ],
-    expectedPicked: ["c9g1", "c9r1", "c9g2"],
-    requiredBlocks: ["robot_if", "cargo_is_color", "front_is_wall", "robot_repeat", "logic_or"],
-    requiredNesting: [{ parent: "robot_repeat", child: "robot_if" }],
+    expectedPicked: ["c9g1", "c9r1", "c9g2", "c9r2", "c9r3", "c9g3"],
+    requiredBlocks: ["robot_if", "cargo_is_color", "robot_repeat", "move_forward", "turn_right", "logic_or"],
+    requiredNesting: [
+      { parent: "robot_repeat", child: "robot_repeat" },
+      { parent: "robot_repeat", child: "robot_if" },
+      { parent: "robot_repeat", child: "move_forward" }
+    ],
+    requiredRepeatTimes: [3, 3],
+    requiredConditionCombination: {
+      operator: "logic_or",
+      predicates: [
+        { type: "cargo_is_color", color: "green" },
+        { type: "cargo_is_color", color: "red" }
+      ]
+    },
+    blockLimits: { robot_repeat: 2, move_forward: 1, robot_if: 1, logic_or: 1, cargo_is_color: 2, take_cargo: 1, turn_right: 1 },
+    maxBlocks: 9,
     allowLogic: true
   },
   {
@@ -187,6 +235,13 @@ const DELTA = {
   west: { dx: -1, dy: 0 }
 };
 const COLOR_NAMES = { green: "зелёный", red: "красный", blue: "синий", yellow: "жёлтый" };
+const OBSTACLE_POSITION_NAMES = {
+  front: "впереди",
+  above: "сверху",
+  right: "справа",
+  below: "снизу",
+  left: "слева"
+};
 const CODE_STORAGE_KEY = "robotBlocklyCodeByTaskV2";
 const LAST_TASK_STORAGE_KEY = "robotBlocklyLastTaskV2";
 const COMPLETED_STORAGE_KEY = "robotBlocklyCompletedV2";
@@ -490,7 +545,20 @@ function defineBlocks() {
     { type: "turn_left", message0: "повернуть налево", previousStatement: null, nextStatement: null, colour: 270 },
     { type: "turn_right", message0: "повернуть направо", previousStatement: null, nextStatement: null, colour: 270 },
     { type: "take_cargo", message0: "взять груз", previousStatement: null, nextStatement: null, colour: 270 },
-    { type: "front_is_wall", message0: "впереди препятствие?", output: "Boolean", colour: 120 },
+    {
+      type: "front_is_wall", message0: "препятствие %1?",
+      args0: [{
+        type: "field_dropdown", name: "POSITION",
+        options: [
+          ["впереди", "front"],
+          ["сверху", "above"],
+          ["справа", "right"],
+          ["снизу", "below"],
+          ["слева", "left"]
+        ]
+      }],
+      output: "Boolean", colour: 120
+    },
     {
       type: "cargo_is_color", message0: "груз %1 цвета?",
       args0: [{
@@ -644,11 +712,41 @@ function hasNestedBlock(parentType, childType) {
   });
 }
 
+function blockMatchesPredicate(block, predicate) {
+  if (!block || block.type !== predicate.type) return false;
+  if (predicate.color && block.getFieldValue("COLOR") !== predicate.color) return false;
+  if (predicate.position && (block.getFieldValue("POSITION") || "front") !== predicate.position) return false;
+  return true;
+}
+
+function hasConditionCombination(combination) {
+  return collectBlocks().some(function (block) {
+    if (block.type !== combination.operator) return false;
+    const first = block.getInputTargetBlock("A");
+    const second = block.getInputTargetBlock("B");
+    const expectedFirst = combination.predicates[0];
+    const expectedSecond = combination.predicates[1];
+    return (blockMatchesPredicate(first, expectedFirst) && blockMatchesPredicate(second, expectedSecond)) ||
+      (blockMatchesPredicate(first, expectedSecond) && blockMatchesPredicate(second, expectedFirst));
+  });
+}
+
+function predicateLabel(predicate) {
+  if (predicate.type === "cargo_is_color") return "«груз " + COLOR_NAMES[predicate.color] + " цвета?»";
+  if (predicate.type === "front_is_wall") return "«препятствие " + OBSTACLE_POSITION_NAMES[predicate.position] + "?»";
+  return "нужная проверка";
+}
+
 function conditionValue(block) {
   if (!block) return false;
   const task = TASKS[currentTaskIndex];
   if (block.type === "front_is_wall") {
-    const direction = DELTA[currentState.dir];
+    const position = block.getFieldValue("POSITION") || "front";
+    const direction = position === "front" ? DELTA[currentState.dir] : DELTA[
+      position === "above" ? "north" :
+        position === "right" ? "east" :
+          position === "below" ? "south" : "west"
+    ];
     return isWall(task, currentState.x + direction.dx, currentState.y + direction.dy);
   }
   if (block.type === "cargo_is_color") {
@@ -729,7 +827,7 @@ function validateTask() {
   const types = new Set(blocks.map(function (block) { return block.type; }));
   const labels = {
     robot_if: "условный блок «если»",
-    front_is_wall: "проверка «впереди препятствие?»",
+    front_is_wall: "проверка препятствия",
     cargo_is_color: "проверка цвета груза",
     robot_repeat: "цикл «повторить»",
     logic_and: "логическое «и»",
@@ -742,6 +840,35 @@ function validateTask() {
   for (const rule of task.requiredNesting || []) {
     if (!hasNestedBlock(rule.parent, rule.child)) {
       return { ok: false, text: "В этой задаче " + labels[rule.child] + " должен быть внутри цикла «повторить»." };
+    }
+  }
+  for (const predicate of task.requiredPredicates || []) {
+    if (!blocks.some(function (block) { return blockMatchesPredicate(block, predicate); })) {
+      return { ok: false, text: "В решении не хватает проверки " + predicateLabel(predicate) + "." };
+    }
+  }
+  if (task.requiredConditionCombination && !hasConditionCombination(task.requiredConditionCombination)) {
+    const predicates = task.requiredConditionCombination.predicates;
+    const operator = task.requiredConditionCombination.operator === "logic_and" ? "«и»" : "«или»";
+    return {
+      ok: false,
+      text: "Соедини проверки " + predicateLabel(predicates[0]) + " и " + predicateLabel(predicates[1]) + " словом " + operator + "."
+    };
+  }
+  if (task.requiredRepeatTimes) {
+    const expectedCounts = task.requiredRepeatTimes.slice().sort(function (first, second) { return first - second; });
+    const actualCounts = blocks
+      .filter(function (block) { return block.type === "robot_repeat"; })
+      .map(function (block) { return Number(block.getFieldValue("TIMES")); })
+      .sort(function (first, second) { return first - second; });
+    const hasWrongCount = actualCounts.length !== expectedCounts.length || actualCounts.some(function (count, index) {
+      return count !== expectedCounts[index];
+    });
+    if (hasWrongCount) {
+      const repeatText = expectedCounts.length === 1
+        ? "повторить " + expectedCounts[0] + " раз"
+        : "оба цикла должны повторяться по 3 раза";
+      return { ok: false, text: "В этой задаче нужно выбрать: «" + repeatText + "»." };
     }
   }
   for (const type of Object.keys(task.blockLimits || {})) {
@@ -817,6 +944,13 @@ function closeModal() {
   document.getElementById("resultModal").classList.add("hidden");
 }
 
+function returnRobotToStart() {
+  currentState = cloneTaskState(TASKS[currentTaskIndex]);
+  renderWorld();
+  setStatus("Готов", "idle");
+  showMessage("Робот вернулся на старт. Исправь программу и запусти её снова.", "info");
+}
+
 function registerFailure(reason) {
   failedAttempts[currentTaskIndex] = (failedAttempts[currentTaskIndex] || 0) + 1;
   updateHintAvailability();
@@ -890,6 +1024,7 @@ document.addEventListener("DOMContentLoaded", function () {
     openModal("hint");
   });
   document.getElementById("modalRestartBtn").addEventListener("click", function () {
+    if (this.textContent === "Попробовать снова") returnRobotToStart();
     closeModal();
   });
   document.getElementById("modalNextBtn").addEventListener("click", function () {
