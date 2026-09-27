@@ -470,6 +470,14 @@ class DegreeField extends Blockly.FieldDropdown {
 }
 
 function defineDegreeBlocks() {
+  Blockly.Blocks.program_start = {
+    init: function () {
+      this.appendStatementInput("DO").appendField("старт");
+      this.setColour(230);
+      this.setTooltip("Команды внутри блока выполняются при запуске.");
+    }
+  };
+
   Blockly.Blocks.move_in_direction = {
     init: function () {
       this.appendDummyInput()
@@ -570,6 +578,12 @@ function degreeToolbox(task) {
   return {
     kind: "categoryToolbox",
     contents: [
+      {
+        kind: "category",
+        name: "Программа",
+        colour: "#5B72A5",
+        contents: [{ kind: "block", type: "program_start" }]
+      },
       { kind: "category", name: "Движение", colour: "#368DC7", contents: movement },
       {
         kind: "category",
@@ -825,8 +839,19 @@ function collectDegreeBlocks() {
     });
     if (block.nextConnection) visit(block.nextConnection.targetBlock());
   }
-  degreeWorkspace.getTopBlocks(true).forEach(visit);
+  const start = getDegreeProgramStartBlock();
+  if (start) visit(start.getInputTargetBlock("DO"));
   return all;
+}
+
+function getDegreeProgramStartBlocks() {
+  return degreeWorkspace.getTopBlocks(true)
+    .filter(function (block) { return block.type === "program_start"; })
+    .sort(function (first, second) { return first.y - second.y; });
+}
+
+function getDegreeProgramStartBlock() {
+  return getDegreeProgramStartBlocks()[0] || null;
 }
 
 function hasDegreeNesting(parentType, childType) {
@@ -1013,8 +1038,13 @@ function registerDegreeFailure(reason) {
 
 async function runDegreeProgram() {
   if (degreeRunning) return;
-  if (!degreeWorkspace.getTopBlocks(true).length) {
-    registerDegreeFailure("Сначала собери программу из блоков.");
+  const starts = getDegreeProgramStartBlocks();
+  if (!starts.length) {
+    registerDegreeFailure("Сначала добавь блок «старт» и присоедини к нему команды.");
+    return;
+  }
+  if (starts.length > 1) {
+    registerDegreeFailure("В программе должен быть только один блок «старт».");
     return;
   }
   closeDegreeResult();
@@ -1027,12 +1057,7 @@ async function runDegreeProgram() {
   showDegreeMessage("Робот выполняет программу.", "info");
 
   try {
-    const roots = degreeWorkspace.getTopBlocks(true)
-      .filter(function (block) { return !block.outputConnection; })
-      .sort(function (first, second) { return first.y - second.y; });
-    for (const root of roots) {
-      await executeDegreeStatement(root);
-    }
+    await executeDegreeStatement(starts[0].getInputTargetBlock("DO"));
     if (!degreeState.halted) {
       const result = validateDegreeTask();
       if (result.ok) {
@@ -1101,6 +1126,4 @@ document.addEventListener("DOMContentLoaded", function () {
     if (degreeTaskIndex < DEGREE_TASKS.length - 1) loadDegreeTask(degreeTaskIndex + 1);
   });
 });
-
-
 

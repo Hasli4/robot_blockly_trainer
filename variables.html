@@ -3,58 +3,49 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Тренажёр: Условный оператор — Робот</title>
+  <title>Тренажёр: Переменные — Робот</title>
   <link rel="icon" type="image/png" href="robot.png">
   <link rel="apple-touch-icon" href="robot.png">
   <link rel="stylesheet" href="style.css">
-
-  <!-- Blockly -->
+  <link rel="stylesheet" href="variables.css">
   <script src="https://cdn.jsdelivr.net/npm/blockly@11.0.0/blockly.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/blockly@11.0.0/msg/ru.js"></script>
 </head>
-<body class="conditions-page">
+<body class="variables-page">
   <header class="topbar">
     <div class="brand">
       <div class="brand-icon">
         <img src="robot.png" alt="Робот" class="brand-robot" onerror="this.classList.add('is-missing')">
       </div>
       <div>
-        <h1>Робот и условные команды</h1>
-        <div class="subtitle">Собери программу из блоков и доведи робота до финиша</div>
+        <h1>Робот и переменные</h1>
+        <div class="subtitle">Научи робота запоминать числа и считать посылки</div>
       </div>
     </div>
 
     <nav class="course-nav" aria-label="Темы тренажёра">
-      <a class="course-link active" href="index.html">Условия</a>
+      <a class="course-link" href="index.html">Условия</a>
       <a class="course-link" href="degrees.html">Вращение и градусы</a>
-      <a class="course-link" href="variables.html">Переменные</a>
+      <a class="course-link active" href="variables.html">Переменные</a>
     </nav>
 
     <div class="task-nav">
       <button id="prevTaskBtn" class="nav-btn" title="Предыдущая задача">←</button>
-      <div class="task-counter">
-        Задача <strong id="taskNumber">1</strong> из 10
-      </div>
+      <div class="task-counter">Задача <strong id="taskNumber">1</strong> из 10</div>
       <button id="nextTaskBtn" class="nav-btn" title="Следующая задача">→</button>
     </div>
   </header>
 
-  <main class="layout">
+  <main class="layout variables-layout">
     <aside class="panel task-panel">
       <div class="section-title">Задание</div>
+      <div class="task-stage" id="taskStage"></div>
       <div class="task-title" id="taskTitle"></div>
       <div class="task-description" id="taskDescription"></div>
 
       <div class="goal-box">
         <div class="goal-label">Нужно сделать</div>
         <div id="taskGoal"></div>
-      </div>
-
-      <div class="legend">
-        <div><span class="dot green"></span> зелёный груз</div>
-        <div><span class="dot red"></span> красный груз</div>
-        <div><span class="dot blue"></span> синий груз</div>
-        <div><span class="dot yellow"></span> жёлтый груз</div>
       </div>
 
       <div id="hintBox" class="hint-box hidden">
@@ -65,12 +56,12 @@
       <div class="task-list" id="taskList"></div>
     </aside>
 
-    <section id="conditionCenterColumn" class="center-column">
+    <section id="variablesCenterColumn" class="center-column">
       <div class="panel world-panel">
         <div class="panel-header">
           <div>
             <div class="section-title">Поле</div>
-            <div class="mini-text">Робот выполняет блоки сверху вниз</div>
+            <div class="mini-text" id="worldCaption">Робот выполняет блоки сверху вниз</div>
           </div>
           <div class="world-tools">
             <div class="world-zoom-controls" aria-label="Масштаб поля">
@@ -80,12 +71,12 @@
             <div id="runStatus" class="status idle">Готов</div>
           </div>
         </div>
-        <div id="world" class="world"></div>
+        <div id="world" class="variables-world"></div>
       </div>
 
       <div
-        id="conditionPanelResizer"
-        class="conditions-panel-resizer"
+        id="variablesPanelResizer"
+        class="variables-panel-resizer"
         role="separator"
         aria-label="Изменить высоту поля и области кода"
         aria-orientation="horizontal"
@@ -96,7 +87,7 @@
         <div class="panel-header">
           <div>
             <div class="section-title">Программа</div>
-            <div class="mini-text">Перетащи блоки и соедини их</div>
+            <div class="mini-text">Собери программу из блоков</div>
           </div>
           <div class="actions">
             <button id="runBtn" class="primary-btn">▶ Запустить</button>
@@ -107,39 +98,32 @@
       </div>
     </section>
 
-    <aside class="panel help-panel">
-      <div class="section-title">Команды</div>
-
-      <div class="command-group">
-        <div class="command-title movement-title">Движение</div>
-        <div class="command-text">Шагнуть вперёд</div>
-        <div class="command-text">Повернуть налево</div>
-        <div class="command-text">Повернуть направо</div>
-        <div class="command-text">Взять груз</div>
+    <aside class="panel variables-help-panel">
+      <div class="section-title">Переменные робота</div>
+      <div class="counter-card">
+        <div class="counter-card-label">Переменные программы</div>
+        <div id="variableReadout" class="variable-readout"><span class="empty-readout">Переменных пока нет</span></div>
       </div>
 
       <div class="command-group">
-        <div class="command-title condition-title">Условия</div>
-        <div class="command-text">Препятствие впереди, сверху и по сторонам?</div>
-        <div class="command-text">Груз зелёного цвета?</div>
-        <div class="command-text">Груз красного цвета?</div>
-        <div class="command-text">Груз синего цвета?</div>
-        <div class="command-text">Груз жёлтого цвета?</div>
-        <div class="command-text">Если ... то</div>
-        <div class="command-text">Если ... то ... иначе ...</div>
-        <div class="command-text">Логическое «и» / «или» (с 6-й задачи)</div>
+        <div class="command-title variables-command-title">Как работает переменная</div>
+        <div class="command-text">Сначала создай переменную. Потом можно задать ей число или изменить это число.</div>
       </div>
 
       <div class="command-group">
-        <div class="command-title loop-title">Циклы</div>
-        <div class="command-text">Повторить N раз</div>
+        <div class="command-title variables-command-title">Ящики с посылками</div>
+        <div class="command-text">В ящике спрятано несколько посылок. Робот берёт их по одной, а переменная считает, сколько уже собрано.</div>
+      </div>
+
+      <div class="command-group">
+        <div class="command-title variables-command-title">Цикл-счётчик</div>
+        <div class="command-text">Цикл повторяется, пока счётчик меньше нужного числа. Внутри цикла: взять посылку и прибавить к счётчику 1.</div>
       </div>
 
       <div class="rules">
-        <div class="rules-title">Правила тренажёра</div>
-        <p>Робот не может пройти сквозь стену и выйти за пределы поля.</p>
-        <p>Груз можно взять только с той клетки, где стоит робот.</p>
-        <p>Для каждой задачи проверяется не только финиш, но и нужный способ решения.</p>
+        <div class="rules-title">Правила</div>
+        <p>Посылку можно взять, только стоя на клетке с ящиком.</p>
+        <p>Если ящик пуст, робот не сможет взять ещё одну посылку.</p>
       </div>
 
       <div id="messageBox" class="message-box"></div>
@@ -147,8 +131,8 @@
   </main>
 
   <footer class="footer">
-    <span>Blockly + собственный простой исполнитель робота</span>
-    <span>10 учебных задач</span>
+    <span>Blockly + робот на клеточном поле</span>
+    <span>10 задач про переменные</span>
   </footer>
 
   <div id="resultModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
@@ -158,12 +142,12 @@
       <p id="modalText"></p>
       <div class="modal-actions">
         <button id="modalHintBtn" class="secondary-btn hidden">Взять подсказку</button>
-        <button id="modalRestartBtn" class="secondary-btn hidden">Попробовать снова</button>
-        <button id="modalNextBtn" class="primary-btn hidden">Перейти к следующему заданию</button>
+        <button id="modalRetryBtn" class="secondary-btn hidden">Попробовать снова</button>
+        <button id="modalNextBtn" class="primary-btn hidden">Следующая задача</button>
       </div>
     </div>
   </div>
 
-  <script src="app.js"></script>
+  <script src="variables.js"></script>
 </body>
 </html>

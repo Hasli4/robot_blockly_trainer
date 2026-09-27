@@ -538,6 +538,11 @@ function escapeHtml(value) {
 function defineBlocks() {
   Blockly.defineBlocksWithJsonArray([
     {
+      type: "program_start", message0: "старт %1",
+      args0: [{ type: "input_statement", name: "DO" }],
+      colour: 230
+    },
+    {
       type: "move_forward", message0: "шагнуть вперёд на %1 клеток",
       args0: [{ type: "field_number", name: "STEPS", value: 1, min: 1, max: 20, precision: 1 }],
       previousStatement: null, nextStatement: null, colour: 270
@@ -616,6 +621,10 @@ function getToolbox(task) {
     kind: "categoryToolbox",
     contents: [
       {
+        kind: "category", name: "Программа", colour: "#5B72A5",
+        contents: [{ kind: "block", type: "program_start" }]
+      },
+      {
         kind: "category", name: "Движение", colour: "#7B61A8",
         contents: [
           { kind: "block", type: "move_forward", fields: { STEPS: 1 } },
@@ -689,8 +698,19 @@ function collectBlocks() {
     });
     if (block.nextConnection) visit(block.nextConnection.targetBlock());
   };
-  workspace.getTopBlocks(true).forEach(visit);
+  const start = getProgramStartBlock();
+  if (start) visit(start.getInputTargetBlock("DO"));
   return blocks;
+}
+
+function getProgramStartBlocks() {
+  return workspace.getTopBlocks(true)
+    .filter(function (block) { return block.type === "program_start"; })
+    .sort(function (first, second) { return first.y - second.y; });
+}
+
+function getProgramStartBlock() {
+  return getProgramStartBlocks()[0] || null;
 }
 
 function hasNestedBlock(parentType, childType) {
@@ -961,8 +981,13 @@ function registerFailure(reason) {
 
 async function runProgram() {
   if (isRunning) return;
-  if (!workspace.getTopBlocks(true).length) {
-    registerFailure("Сначала собери программу из блоков.");
+  const starts = getProgramStartBlocks();
+  if (!starts.length) {
+    registerFailure("Сначала добавь блок «старт» и присоедини к нему команды.");
+    return;
+  }
+  if (starts.length > 1) {
+    registerFailure("В программе должен быть только один блок «старт».");
     return;
   }
   closeModal();
@@ -973,10 +998,7 @@ async function runProgram() {
   setStatus("Выполнение...", "running");
   showMessage("Робот выполняет твою программу.", "info");
   try {
-    const roots = workspace.getTopBlocks(true).filter(function (block) {
-      return !block.outputConnection;
-    }).sort(function (first, second) { return first.y - second.y; });
-    for (const root of roots) await executeStatement(root);
+    await executeStatement(starts[0].getInputTargetBlock("DO"));
     if (!currentState.halted) {
       const result = validateTask();
       if (result.ok) {
