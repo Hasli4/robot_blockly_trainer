@@ -472,8 +472,9 @@ class DegreeField extends Blockly.FieldDropdown {
 function defineDegreeBlocks() {
   Blockly.Blocks.program_start = {
     init: function () {
-      this.appendStatementInput("DO").appendField("Старт");
-      this.setColour(230);
+      this.appendDummyInput().appendField("Старт");
+      this.setNextStatement(true);
+      this.setColour(45);
       this.setTooltip("Команды внутри блока выполняются при запуске.");
     }
   };
@@ -841,7 +842,7 @@ function collectDegreeBlocks() {
     if (block.nextConnection) visit(block.nextConnection.targetBlock());
   }
   const start = getDegreeProgramStartBlock();
-  if (start) visit(start.getInputTargetBlock("DO"));
+  if (start) visit(start.nextConnection ? start.nextConnection.targetBlock() : null);
   return all;
 }
 
@@ -858,7 +859,6 @@ function getDegreeProgramStartBlock() {
 function ensureDegreeProgramStartBlock() {
   const starts = getDegreeProgramStartBlocks();
   let start = starts[0];
-  const wasCreated = !start;
   starts.slice(1).forEach(function (extra) { extra.dispose(false); });
   if (!start) {
     start = degreeWorkspace.newBlock("program_start");
@@ -866,7 +866,7 @@ function ensureDegreeProgramStartBlock() {
     start.render();
     start.moveBy(42, 32);
   }
-  if (wasCreated) connectLegacyDegreeProgramToStart(start);
+  connectLegacyDegreeProgramToStart(start);
   start.setDeletable(false);
   start.setMovable(false);
   return start;
@@ -878,7 +878,7 @@ function connectLegacyDegreeProgramToStart(start) {
     .sort(function (first, second) { return first.y - second.y; });
   let tail = start;
   roots.forEach(function (root) {
-    const connection = tail === start ? tail.getInput("DO").connection : tail.nextConnection;
+    const connection = tail.nextConnection;
     if (!connection || connection.targetConnection) return;
     connection.connect(root.previousConnection);
     tail = root;
@@ -1079,6 +1079,10 @@ async function runDegreeProgram() {
     registerDegreeFailure("В программе должен быть только один блок «старт».");
     return;
   }
+  if (!starts[0].nextConnection || !starts[0].nextConnection.targetBlock()) {
+    registerDegreeFailure("Присоедини к блоку «Старт» хотя бы одну команду.");
+    return;
+  }
   closeDegreeResult();
   degreeRunning = true;
   setDegreeControls(true);
@@ -1089,7 +1093,7 @@ async function runDegreeProgram() {
   showDegreeMessage("Робот выполняет программу.", "info");
 
   try {
-    await executeDegreeStatement(starts[0].getInputTargetBlock("DO"));
+    await executeDegreeStatement(starts[0].nextConnection.targetBlock());
     if (!degreeState.halted) {
       const result = validateDegreeTask();
       if (result.ok) {

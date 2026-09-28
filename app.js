@@ -544,9 +544,9 @@ function escapeHtml(value) {
 function defineBlocks() {
   Blockly.defineBlocksWithJsonArray([
     {
-      type: "program_start", message0: "Старт %1",
-      args0: [{ type: "input_statement", name: "DO" }],
-      colour: 230
+      type: "program_start", message0: "Старт",
+      nextStatement: null,
+      colour: 45
     },
     {
       type: "move_forward", message0: "шагнуть вперёд на %1 клеток",
@@ -702,7 +702,7 @@ function collectBlocks() {
     if (block.nextConnection) visit(block.nextConnection.targetBlock());
   };
   const start = getProgramStartBlock();
-  if (start) visit(start.getInputTargetBlock("DO"));
+  if (start) visit(start.nextConnection ? start.nextConnection.targetBlock() : null);
   return blocks;
 }
 
@@ -719,7 +719,6 @@ function getProgramStartBlock() {
 function ensureProgramStartBlock() {
   const starts = getProgramStartBlocks();
   let start = starts[0];
-  const wasCreated = !start;
   starts.slice(1).forEach(function (extra) { extra.dispose(false); });
   if (!start) {
     start = workspace.newBlock("program_start");
@@ -727,7 +726,7 @@ function ensureProgramStartBlock() {
     start.render();
     start.moveBy(42, 32);
   }
-  if (wasCreated) connectLegacyProgramToStart(start);
+  connectLegacyProgramToStart(start);
   start.setDeletable(false);
   start.setMovable(false);
   return start;
@@ -739,7 +738,7 @@ function connectLegacyProgramToStart(start) {
     .sort(function (first, second) { return first.y - second.y; });
   let tail = start;
   roots.forEach(function (root) {
-    const connection = tail === start ? tail.getInput("DO").connection : tail.nextConnection;
+    const connection = tail.nextConnection;
     if (!connection || connection.targetConnection) return;
     connection.connect(root.previousConnection);
     tail = root;
@@ -1024,6 +1023,10 @@ async function runProgram() {
     registerFailure("В программе должен быть только один блок «старт».");
     return;
   }
+  if (!starts[0].nextConnection || !starts[0].nextConnection.targetBlock()) {
+    registerFailure("Присоедини к блоку «Старт» хотя бы одну команду.");
+    return;
+  }
   closeModal();
   isRunning = true;
   setRunControls(true);
@@ -1032,7 +1035,7 @@ async function runProgram() {
   setStatus("Выполнение...", "running");
   showMessage("Робот выполняет твою программу.", "info");
   try {
-    await executeStatement(starts[0].getInputTargetBlock("DO"));
+    await executeStatement(starts[0].nextConnection.targetBlock());
     if (!currentState.halted) {
       const result = validateTask();
       if (result.ok) {

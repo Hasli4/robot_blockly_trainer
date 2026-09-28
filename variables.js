@@ -398,9 +398,9 @@ function defineVariableBlocks() {
   Blockly.defineBlocksWithJsonArray([
     {
       type: "program_start",
-      message0: "Старт %1",
-      args0: [{ type: "input_statement", name: "DO" }],
-      colour: 230
+      message0: "Старт",
+      nextStatement: null,
+      colour: 45
     },
     {
       type: "move_forward",
@@ -626,7 +626,7 @@ function collectVariablesBlocks() {
     if (block.nextConnection) visit(block.nextConnection.targetBlock());
   };
   const start = getVariablesProgramStartBlock();
-  if (start) visit(start.getInputTargetBlock("DO"));
+  if (start) visit(start.nextConnection ? start.nextConnection.targetBlock() : null);
   return blocks;
 }
 
@@ -643,7 +643,6 @@ function getVariablesProgramStartBlock() {
 function ensureVariablesProgramStartBlock() {
   const starts = getVariablesProgramStartBlocks();
   let start = starts[0];
-  const wasCreated = !start;
   starts.slice(1).forEach(function (extra) { extra.dispose(false); });
   if (!start) {
     start = variablesWorkspace.newBlock("program_start");
@@ -651,7 +650,7 @@ function ensureVariablesProgramStartBlock() {
     start.render();
     start.moveBy(42, 32);
   }
-  if (wasCreated) connectLegacyVariablesProgramToStart(start);
+  connectLegacyVariablesProgramToStart(start);
   start.setDeletable(false);
   start.setMovable(false);
   return start;
@@ -663,7 +662,7 @@ function connectLegacyVariablesProgramToStart(start) {
     .sort(function (first, second) { return first.y - second.y; });
   let tail = start;
   roots.forEach(function (root) {
-    const connection = tail === start ? tail.getInput("DO").connection : tail.nextConnection;
+    const connection = tail.nextConnection;
     if (!connection || connection.targetConnection) return;
     connection.connect(root.previousConnection);
     tail = root;
@@ -938,6 +937,10 @@ async function runVariablesProgram() {
     registerVariablesFailure("В программе должен быть только один блок «старт».");
     return;
   }
+  if (!starts[0].nextConnection || !starts[0].nextConnection.targetBlock()) {
+    registerVariablesFailure("Присоедини к блоку «Старт» хотя бы одну команду.");
+    return;
+  }
   closeVariablesResult();
   variablesRunning = true;
   variablesHasRun = true;
@@ -948,7 +951,7 @@ async function runVariablesProgram() {
   showVariablesMessage("Робот выполняет программу.", "info");
 
   try {
-    await executeVariablesStatement(starts[0].getInputTargetBlock("DO"));
+    await executeVariablesStatement(starts[0].nextConnection.targetBlock());
     if (!variablesState.halted) {
       const result = validateVariablesTask();
       if (result.ok) {
