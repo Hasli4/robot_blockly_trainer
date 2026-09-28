@@ -472,7 +472,7 @@ class DegreeField extends Blockly.FieldDropdown {
 function defineDegreeBlocks() {
   Blockly.Blocks.program_start = {
     init: function () {
-      this.appendStatementInput("DO").appendField("старт");
+      this.appendStatementInput("DO").appendField("Старт");
       this.setColour(230);
       this.setTooltip("Команды внутри блока выполняются при запуске.");
     }
@@ -578,12 +578,6 @@ function degreeToolbox(task) {
   return {
     kind: "categoryToolbox",
     contents: [
-      {
-        kind: "category",
-        name: "Программа",
-        colour: "#5B72A5",
-        contents: [{ kind: "block", type: "program_start" }]
-      },
       { kind: "category", name: "Движение", colour: "#368DC7", contents: movement },
       {
         kind: "category",
@@ -675,6 +669,7 @@ function loadDegreeTask(index, saveCurrent) {
     if (saved) {
       Blockly.serialization.workspaces.load(saved, degreeWorkspace);
     }
+    ensureDegreeProgramStartBlock();
   } catch {
     const programs = getSavedDegreePrograms();
     delete programs[degreeTaskIndex];
@@ -692,7 +687,13 @@ function loadDegreeTask(index, saveCurrent) {
 
 function clearDegreeCode() {
   if (degreeRunning) return;
-  degreeWorkspace.clear();
+  degreeLoading = true;
+  try {
+    degreeWorkspace.clear();
+    ensureDegreeProgramStartBlock();
+  } finally {
+    degreeLoading = false;
+  }
   const programs = getSavedDegreePrograms();
   delete programs[degreeTaskIndex];
   localStorage.setItem(DEGREE_CODE_STORAGE, JSON.stringify(programs));
@@ -852,6 +853,37 @@ function getDegreeProgramStartBlocks() {
 
 function getDegreeProgramStartBlock() {
   return getDegreeProgramStartBlocks()[0] || null;
+}
+
+function ensureDegreeProgramStartBlock() {
+  const starts = getDegreeProgramStartBlocks();
+  let start = starts[0];
+  const wasCreated = !start;
+  starts.slice(1).forEach(function (extra) { extra.dispose(false); });
+  if (!start) {
+    start = degreeWorkspace.newBlock("program_start");
+    start.initSvg();
+    start.render();
+    start.moveBy(42, 32);
+  }
+  if (wasCreated) connectLegacyDegreeProgramToStart(start);
+  start.setDeletable(false);
+  start.setMovable(false);
+  return start;
+}
+
+function connectLegacyDegreeProgramToStart(start) {
+  const roots = degreeWorkspace.getTopBlocks(true)
+    .filter(function (block) { return block !== start && block.previousConnection && !block.outputConnection; })
+    .sort(function (first, second) { return first.y - second.y; });
+  let tail = start;
+  roots.forEach(function (root) {
+    const connection = tail === start ? tail.getInput("DO").connection : tail.nextConnection;
+    if (!connection || connection.targetConnection) return;
+    connection.connect(root.previousConnection);
+    tail = root;
+    while (tail.getNextBlock && tail.getNextBlock()) tail = tail.getNextBlock();
+  });
 }
 
 function hasDegreeNesting(parentType, childType) {
@@ -1126,4 +1158,3 @@ document.addEventListener("DOMContentLoaded", function () {
     if (degreeTaskIndex < DEGREE_TASKS.length - 1) loadDegreeTask(degreeTaskIndex + 1);
   });
 });
-

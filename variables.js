@@ -398,7 +398,7 @@ function defineVariableBlocks() {
   Blockly.defineBlocksWithJsonArray([
     {
       type: "program_start",
-      message0: "старт %1",
+      message0: "Старт %1",
       args0: [{ type: "input_statement", name: "DO" }],
       colour: 230
     },
@@ -470,12 +470,6 @@ function getVariablesToolbox() {
   return {
     kind: "categoryToolbox",
     contents: [
-      {
-        kind: "category",
-        name: "Программа",
-        colour: "#5B72A5",
-        contents: [{ kind: "block", type: "program_start" }]
-      },
       {
         kind: "category",
         name: "Движение",
@@ -585,6 +579,7 @@ function loadVariablesTask(index, shouldSaveCurrent) {
         saved = null;
       }
     }
+    ensureVariablesProgramStartBlock();
   } finally {
     variablesLoading = false;
   }
@@ -599,6 +594,7 @@ function clearVariablesCode() {
   variablesLoading = true;
   try {
     variablesWorkspace.clear();
+    ensureVariablesProgramStartBlock();
     const programs = loadVariablesJson(VARIABLE_CODE_STORAGE, {});
     delete programs[variablesTaskIndex];
     localStorage.setItem(VARIABLE_CODE_STORAGE, JSON.stringify(programs));
@@ -642,6 +638,37 @@ function getVariablesProgramStartBlocks() {
 
 function getVariablesProgramStartBlock() {
   return getVariablesProgramStartBlocks()[0] || null;
+}
+
+function ensureVariablesProgramStartBlock() {
+  const starts = getVariablesProgramStartBlocks();
+  let start = starts[0];
+  const wasCreated = !start;
+  starts.slice(1).forEach(function (extra) { extra.dispose(false); });
+  if (!start) {
+    start = variablesWorkspace.newBlock("program_start");
+    start.initSvg();
+    start.render();
+    start.moveBy(42, 32);
+  }
+  if (wasCreated) connectLegacyVariablesProgramToStart(start);
+  start.setDeletable(false);
+  start.setMovable(false);
+  return start;
+}
+
+function connectLegacyVariablesProgramToStart(start) {
+  const roots = variablesWorkspace.getTopBlocks(true)
+    .filter(function (block) { return block !== start && block.previousConnection && !block.outputConnection; })
+    .sort(function (first, second) { return first.y - second.y; });
+  let tail = start;
+  roots.forEach(function (root) {
+    const connection = tail === start ? tail.getInput("DO").connection : tail.nextConnection;
+    if (!connection || connection.targetConnection) return;
+    connection.connect(root.previousConnection);
+    tail = root;
+    while (tail.getNextBlock && tail.getNextBlock()) tail = tail.getNextBlock();
+  });
 }
 
 function hasVariablesNesting(parentType, childType) {

@@ -278,7 +278,13 @@ function saveCurrentProgram() {
 
 function clearCode() {
   if (!workspace || isRunning) return;
-  workspace.clear();
+  isLoadingTask = true;
+  try {
+    workspace.clear();
+    ensureProgramStartBlock();
+  } finally {
+    isLoadingTask = false;
+  }
   const programs = getSavedPrograms();
   delete programs[currentTaskIndex];
   localStorage.setItem(CODE_STORAGE_KEY, JSON.stringify(programs));
@@ -538,7 +544,7 @@ function escapeHtml(value) {
 function defineBlocks() {
   Blockly.defineBlocksWithJsonArray([
     {
-      type: "program_start", message0: "старт %1",
+      type: "program_start", message0: "Старт %1",
       args0: [{ type: "input_statement", name: "DO" }],
       colour: 230
     },
@@ -621,10 +627,6 @@ function getToolbox(task) {
     kind: "categoryToolbox",
     contents: [
       {
-        kind: "category", name: "Программа", colour: "#5B72A5",
-        contents: [{ kind: "block", type: "program_start" }]
-      },
-      {
         kind: "category", name: "Движение", colour: "#7B61A8",
         contents: [
           { kind: "block", type: "move_forward", fields: { STEPS: 1 } },
@@ -679,6 +681,7 @@ function loadTask(index, shouldSaveCurrent) {
         saved = null;
       }
     }
+    ensureProgramStartBlock();
   } finally {
     isLoadingTask = false;
   }
@@ -711,6 +714,37 @@ function getProgramStartBlocks() {
 
 function getProgramStartBlock() {
   return getProgramStartBlocks()[0] || null;
+}
+
+function ensureProgramStartBlock() {
+  const starts = getProgramStartBlocks();
+  let start = starts[0];
+  const wasCreated = !start;
+  starts.slice(1).forEach(function (extra) { extra.dispose(false); });
+  if (!start) {
+    start = workspace.newBlock("program_start");
+    start.initSvg();
+    start.render();
+    start.moveBy(42, 32);
+  }
+  if (wasCreated) connectLegacyProgramToStart(start);
+  start.setDeletable(false);
+  start.setMovable(false);
+  return start;
+}
+
+function connectLegacyProgramToStart(start) {
+  const roots = workspace.getTopBlocks(true)
+    .filter(function (block) { return block !== start && block.previousConnection && !block.outputConnection; })
+    .sort(function (first, second) { return first.y - second.y; });
+  let tail = start;
+  roots.forEach(function (root) {
+    const connection = tail === start ? tail.getInput("DO").connection : tail.nextConnection;
+    if (!connection || connection.targetConnection) return;
+    connection.connect(root.previousConnection);
+    tail = root;
+    while (tail.getNextBlock && tail.getNextBlock()) tail = tail.getNextBlock();
+  });
 }
 
 function hasNestedBlock(parentType, childType) {
